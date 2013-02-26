@@ -1,0 +1,150 @@
+// Разработайте полиформную банковскую программу с иерархией Account. Создайте вектор указателей Account на объекты SavingsAccount и CheckingAccount.
+// Для каждого счета в векторе разрешите специфицировать сумму, снимаемую со счета и сумму, вносимую на счет. Если счет является SavingsAccount,
+// начислите проценты. Распечатайте обновленный баланс
+
+
+
+
+#include <iostream>
+#include <iomanip>
+#include <vector>
+
+using namespace std;
+
+class Account
+{
+    public:
+    Account(double a_balance)
+    {
+        if(a_balance>=0)
+        balance=a_balance;
+        else
+        {balance=0;
+        cout<<"balance is not valid"<<endl;}
+
+    }
+    double balance;
+
+    virtual double credit(double sum)=0;
+
+
+   virtual double debit(double sum)=0;
+
+
+     double getBalance()
+    {
+        return balance;
+    }
+
+};
+
+class SavingsAccount: public Account
+{
+    public:
+    SavingsAccount(double a_balance,double a_interest):Account(a_balance)
+    {
+       interest=a_interest;
+    }
+
+    double interest;
+
+
+    virtual double credit(double sum)
+    {
+        balance+=sum;
+
+          return balance;
+    }
+
+   virtual double debit(double sum)
+    {
+        if(sum>balance)
+        cout<<"Debit amount exceeds account balance"<<endl;
+        else
+        balance-=sum;
+
+        return balance;
+
+    }
+
+    double calculateInterest()
+    {
+        double res=0;
+        res=balance*interest;
+        return res;
+    }
+};
+
+class  CheckingAccount:public Account
+{
+    public:
+    CheckingAccount(double a_balance, double price)
+    :Account(a_balance)
+    {
+        price_transaction=price;
+    }
+
+
+    double price_transaction;
+
+    virtual double credit(double sum)
+    {
+        balance=balance+sum-price_transaction;
+        return balance;
+    }
+
+   virtual double debit(double sum)
+    {   bool take_money=false;
+        if(sum>balance)
+        take_money=false;
+        else
+        take_money=true;
+
+         if(take_money==true)
+         {balance=balance-sum-price_transaction;
+        return balance;}
+         else
+         {cout<<"Debit amount exceeds account balance"<<endl;
+        return balance;}
+
+    }
+};
+
+int main()
+{
+    vector<Account*>myarray;
+
+    SavingsAccount *savingsPtr=new SavingsAccount(3400, 0.05);
+    CheckingAccount *checkingPtr=new CheckingAccount(3400,70);
+
+
+    myarray.push_back(savingsPtr);
+    myarray.push_back(checkingPtr);
+
+    for(int i=0;i<myarray.size();i++)
+    {
+        SavingsAccount *derivedPtr=dynamic_cast<SavingsAccount*>(myarray[i]);
+        if(derivedPtr!=0)
+        {   double inter=0;
+            inter=derivedPtr->calculateInterest();
+            cout<<"interest is:"<<inter<<endl;
+            derivedPtr->credit(inter);
+            cout<<derivedPtr->getBalance();
+            cout<<"\n"<<endl;
+
+        }
+
+        else
+        {
+            myarray[i]->debit(300);
+            cout<<myarray[i]->getBalance();
+        }
+    }
+
+    for(int j=0;j<myarray.size();j++)
+    {
+        delete myarray[j];
+    }
+
+    return 0;
+}
